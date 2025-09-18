@@ -2,17 +2,19 @@ import json
 import websockets
 from datetime import datetime, timezone
 import logging
-
+from nats.aio.client import Client as NATS
+from quantflow_publisher import publish_candle, publish_tick
 
 logger = logging.getLogger(__name__)
     
-async def get_binance_ticker_ws(symbol: str, base_currency: str, quote_currency: str):
+async def get_binance_ticker_ws(symbol: str, base_currency: str, quote_currency: str, nc: NATS):
     url = f"wss://stream.binance.com:9443/ws/{symbol.lower()}@ticker"
+    c_symbol = base_currency.upper() + "/" + quote_currency.upper()
+    printSymbol = "'" + c_symbol + "'" + '        '
+    printSymbol = printSymbol[:11]
+
     async with websockets.connect(url) as ws:
        
-        c_symbol = base_currency.upper() + "/" + quote_currency.upper()
-        printSymbol = "'" + c_symbol + "'" + '        '
-        printSymbol = printSymbol[:11]
 
         logger.info(f"Connected to Binance ticker stream for {c_symbol}")
 
@@ -32,22 +34,23 @@ async def get_binance_ticker_ws(symbol: str, base_currency: str, quote_currency:
                 "low": float(msg['l']),
                 "volume": float(msg['v'])
             }
-            #tick_buffer.append(c_symbol, ticker_data)
-
             logger.info(f"Got tick: Ex: Binance, Symbol: {printSymbol}, Tick Time: {ticker_data['tick_time']}, Price: {ticker_data['last_price']}")
 
-            
-async def get_binance_candle_ws(symbol: str, base_currency: str, quote_currency: str, timeframe: str):
+            await publish_tick(nc, tick=ticker_data)  
+
+
+
+async def get_binance_candle_ws(symbol: str, base_currency: str, quote_currency: str, timeframe: str, nc: NATS):
    
     url = f"wss://stream.binance.com:9443/ws/{symbol.lower()}@kline_{timeframe}"
     c_symbol = base_currency.upper() + "/" + quote_currency.upper()
     printSymbol = "'" + c_symbol + "'" + '        '
     printSymbol = printSymbol[:11]
-        
+    
     async with websockets.connect(url) as ws:
         
         logger.info(f"Connected to Binance candle stream for Symbol:'{c_symbol}', Timeframe: '{timeframe}'")
-        print(f"Connected to Binance candle stream for Symbol:'{c_symbol}', Timeframe: '{timeframe}'")    
+        
         async for message in ws:
             msg = json.loads(message)
             k = msg['k']
@@ -68,8 +71,11 @@ async def get_binance_candle_ws(symbol: str, base_currency: str, quote_currency:
                     "volume": float(k['v']),
                     "close_time": datetime.fromtimestamp(int(k['T']) / 1000, tz=timezone.utc)#.strftime('%Y-%m-%d %H:%M:%S')
                 }
-                
+
                 logger.info(f"Candle closed for Ex: Binance, Symbol: {printSymbol} , Timeframe: '{timeframe}', Close_Time: {candle_data['close_time']}")
+            
+                await publish_candle(nc, candle=candle_data)
+                
 
                 
                
