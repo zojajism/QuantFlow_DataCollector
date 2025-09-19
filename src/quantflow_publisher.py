@@ -116,7 +116,7 @@ async def publish_candle(
         logger.info(f"subject: {subject}")
         logger.info(f"body: {body}")
     except Exception as e:
-        logger.info(
+        logger.error(
                 json.dumps({
                         "EventCode": -1,
                         "Message": f"NATS error: {e}"
@@ -201,7 +201,7 @@ async def publish_tick(
         logger.info(f"subject: {subject}")
         logger.info(f"body: {body}")
     except Exception as e:
-        logger.info(
+        logger.error(
                 json.dumps({
                         "EventCode": -1,
                         "Message": f"NATS error: {e}"
