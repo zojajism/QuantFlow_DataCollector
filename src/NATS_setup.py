@@ -7,6 +7,7 @@ Reusable NATS JetStream setup helper for QuantFlow.
 """
 
 from __future__ import annotations
+import json
 import logging
 import os
 import re
@@ -146,7 +147,12 @@ async def ensure_stream_exists(
     js = _get_js(nc)
     try:
         await js.stream_info(stream_name)
-        logger.info(f"[NATS] Stream '{stream_name}' already exists.")
+        logger.info(
+                json.dumps({
+                        "EventCode": 0,
+                        "Message": f"[NATS] Stream '{stream_name}' already exists."
+                    })
+            )
         return
     except Exception:
         pass

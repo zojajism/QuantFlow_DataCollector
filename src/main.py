@@ -1,4 +1,5 @@
 import asyncio
+import json
 from logger_config import setup_logger
 from exchange_ws import get_binance_ticker_ws, get_binance_candle_ws
 from nats.aio.client import Client as NATS
@@ -8,7 +9,13 @@ import os
 async def main():
     
     logger = setup_logger()
-    logger.info("Starting QuantFlow_DataCollector system...")
+    logger.info(
+                json.dumps({
+                        "EventCode": 0,
+                        "Message": f"Starting QuantFlow_DataCollector..."
+                    })
+            )
+    
     
     symbols = ["BTC/USDT", "ETH/BTC"]
     timeframes= ["1m", "3m", "5m", "15m", "30m", "1h", "4h", "1d"]

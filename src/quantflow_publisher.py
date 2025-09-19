@@ -14,7 +14,7 @@ def _ensure_utc_iso(dt: datetime) -> str:
         dt = dt.replace(tzinfo=timezone.utc)
     dt = dt.astimezone(timezone.utc)
     # Format with microseconds, then truncate to milliseconds
-    return dt.isoformat(timespec="milliseconds").replace("+00:00", "Z")
+    return dt.isoformat(timespec="milliseconds")#.replace("+00:00", "Z")
 
 
 def _symbol_for_subject(base_currency: str, quote_currency: str) -> str:
@@ -104,16 +104,24 @@ async def publish_candle(
     subject = f"candles.{subj_symbol}.{timeframe}"
     msg_id = f"{subj_symbol}-{timeframe}-{close_time_iso}"
 
-    js = nc.jetstream()
-    ack = await js.publish(
-        subject,
-        json.dumps(body, separators=(",", ":"), ensure_ascii=False).encode("utf-8"),
-        headers={"Nats-Msg-Id": msg_id},
-    )
+    try:
+        js = nc.jetstream()
+        ack = await js.publish(
+            subject,
+            json.dumps(body, separators=(",", ":"), ensure_ascii=False).encode("utf-8"),
+            headers={"Nats-Msg-Id": msg_id},
+        )
 
-    logger.info(f"msg_id: {msg_id}")
-    logger.info(f"subject: {subject}")
-    logger.info(f"body: {body}")
+        logger.info(f"msg_id: {msg_id}")
+        logger.info(f"subject: {subject}")
+        logger.info(f"body: {body}")
+    except Exception as e:
+        logger.info(
+                json.dumps({
+                        "EventCode": -1,
+                        "Message": f"NATS error: {e}"
+                    })
+            )
     
 
     return ack
@@ -181,15 +189,23 @@ async def publish_tick(
     subject = f"ticks.{subj_symbol}"
     msg_id = f"{subj_symbol}-tick-{event_time_iso}"
 
-    js = nc.jetstream()
-    ack = await js.publish(
-        subject,
-        json.dumps(body, separators=(",", ":"), ensure_ascii=False).encode("utf-8"),
-        headers={"Nats-Msg-Id": msg_id},
-    )
+    try:
+        js = nc.jetstream()
+        ack = await js.publish(
+            subject,
+            json.dumps(body, separators=(",", ":"), ensure_ascii=False).encode("utf-8"),
+            headers={"Nats-Msg-Id": msg_id},
+        )
 
-    logger.info(f"msg_id: {msg_id}")
-    logger.info(f"subject: {subject}")
-    logger.info(f"body: {body}")
+        logger.info(f"msg_id: {msg_id}")
+        logger.info(f"subject: {subject}")
+        logger.info(f"body: {body}")
+    except Exception as e:
+        logger.info(
+                json.dumps({
+                        "EventCode": -1,
+                        "Message": f"NATS error: {e}"
+                    })
+            )
 
     return ack

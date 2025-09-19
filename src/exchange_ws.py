@@ -15,8 +15,12 @@ async def get_binance_ticker_ws(symbol: str, base_currency: str, quote_currency:
 
     async with websockets.connect(url) as ws:
        
-
-        logger.info(f"Connected to Binance ticker stream for {c_symbol}")
+        logger.info(
+                    json.dumps({
+                        "EventCode": 0,
+                        "Message": f"Connected to Binance ticker stream for {c_symbol}"
+                    })
+                )
 
         async for message in ws:
             msg = json.loads(message)
@@ -34,8 +38,17 @@ async def get_binance_ticker_ws(symbol: str, base_currency: str, quote_currency:
                 "low": float(msg['l']),
                 "volume": float(msg['v'])
             }
-            logger.info(f"Got tick: Ex: Binance, Symbol: {printSymbol}, Tick Time: {ticker_data['tick_time']}, Price: {ticker_data['last_price']}")
 
+            logger.info(
+                    json.dumps({
+                        "EventType": "Tick",
+                        "exchange": "Binance",
+                        "symbol": printSymbol,
+                        "tick_time": ticker_data["tick_time"].isoformat(),  # datetime -> ISO string
+                        "last_price": ticker_data["last_price"]
+                    })
+                )
+                          
             await publish_tick(nc, tick=ticker_data)  
 
 
@@ -49,7 +62,12 @@ async def get_binance_candle_ws(symbol: str, base_currency: str, quote_currency:
     
     async with websockets.connect(url) as ws:
         
-        logger.info(f"Connected to Binance candle stream for Symbol:'{c_symbol}', Timeframe: '{timeframe}'")
+        logger.info(
+                    json.dumps({
+                        "EventCode": 0,
+                        "Message": f"Connected to Binance candle stream for Symbol: {c_symbol}, Timeframe: {timeframe}"
+                    })
+                )
         
         async for message in ws:
             msg = json.loads(message)
@@ -72,8 +90,17 @@ async def get_binance_candle_ws(symbol: str, base_currency: str, quote_currency:
                     "close_time": datetime.fromtimestamp(int(k['T']) / 1000, tz=timezone.utc)#.strftime('%Y-%m-%d %H:%M:%S')
                 }
 
-                logger.info(f"Candle closed for Ex: Binance, Symbol: {printSymbol} , Timeframe: '{timeframe}', Close_Time: {candle_data['close_time']}")
-            
+                logger.info(
+                    json.dumps({
+                        "EventType": "Candle",
+                        "exchange": "Binance",
+                        "symbol": printSymbol,
+                        "timeframe": timeframe,
+                        "close_time": candle_data["close_time"].isoformat(),  # datetime -> ISO string
+                        "close": candle_data["close"]
+                    })
+                )
+
                 await publish_candle(nc, candle=candle_data)
                 
 
