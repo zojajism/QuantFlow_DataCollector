@@ -6,6 +6,8 @@ from datetime import datetime, timezone
 import logging
 from nats.aio.client import Client as NATS
 from quantflow_publisher import publish_candle, publish_tick
+from alert_manager import send_alert
+
 
 logger = logging.getLogger(__name__)
 
@@ -76,12 +78,15 @@ async def get_binance_ticker_ws(symbol: str, base_currency: str, quote_currency:
                 websockets.ConnectionClosedOK,
                 asyncio.TimeoutError,
                 OSError) as e:
+            await send_alert("DataCollectorApp-Ticker", str(e))
             logger.warning(f"Ticker WS dropped ({c_symbol}): {e}; reconnecting in ~{delay:.1f}s")
             delay = await _reconnect_backoff(delay)
             continue
         except Exception as e:
+            await send_alert("DataCollectorApp-Ticker", str(e))
             logger.exception(f"Unexpected ticker error ({c_symbol}): {e}")
             delay = await _reconnect_backoff(delay)
+     
             continue
 
 
@@ -148,10 +153,12 @@ async def get_binance_candle_ws(symbol: str, base_currency: str, quote_currency:
                 websockets.ConnectionClosedOK,
                 asyncio.TimeoutError,
                 OSError) as e:
+            await send_alert("DataCollectorApp-Candle", str(e))
             logger.warning(f"Candle WS dropped ({c_symbol} {timeframe}): {e}; reconnecting in ~{delay:.1f}s")
             delay = await _reconnect_backoff(delay)
             continue
         except Exception as e:
+            await send_alert("DataCollectorApp-Candle", str(e))
             logger.exception(f"Unexpected candle error ({c_symbol} {timeframe}): {e}")
             delay = await _reconnect_backoff(delay)
             continue

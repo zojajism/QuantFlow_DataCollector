@@ -20,3 +20,23 @@ streams:
     discard: old
     dupe_window: "2m"
     replicas: 1
+  
+  - name: STREAM_ALERTS
+    subjects: ["alerts.>"]
+    storage: file
+    retention: limits
+    max_bytes: "2GB"
+    max_age: "24h"
+    discard: old
+    dupe_window: "2m"
+    replicas: 1
+
+  - name: STREAM_ENGINE
+    subjects: ["engine.>"]
+    storage: file
+    retention: limits
+    max_bytes: "2GB"
+    max_age: "24h"
+    discard: old
+    dupe_window: "2m"
+    replicas: 1
