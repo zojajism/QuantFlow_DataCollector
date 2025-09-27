@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 import logging
 from nats.aio.client import Client as NATS
 from quantflow_publisher import publish_candle, publish_tick
-from alert_manager import send_alert
+from telegram_notifier import notify_telegram, ChatType
 
 
 logger = logging.getLogger(__name__)
@@ -73,17 +73,16 @@ async def get_binance_ticker_ws(symbol: str, base_currency: str, quote_currency:
                     # Do not block the recv loop
                     await publish_tick(nc, tick=ticker_data)
                     await asyncio.sleep(0)  # yield to event loop
-
         except (websockets.ConnectionClosedError,
                 websockets.ConnectionClosedOK,
                 asyncio.TimeoutError,
                 OSError) as e:
-            await send_alert("DataCollectorApp-Ticker", str(e))
+            notify_telegram("❌ DataCollectorApp-Tick \n" + str(e), ChatType.ALERT)
             logger.warning(f"Ticker WS dropped ({c_symbol}): {e}; reconnecting in ~{delay:.1f}s")
             delay = await _reconnect_backoff(delay)
             continue
         except Exception as e:
-            await send_alert("DataCollectorApp-Ticker", str(e))
+            notify_telegram("❌ DataCollectorApp-Tick \n" + str(e), ChatType.ALERT)
             logger.exception(f"Unexpected ticker error ({c_symbol}): {e}")
             delay = await _reconnect_backoff(delay)
      
@@ -148,17 +147,16 @@ async def get_binance_candle_ws(symbol: str, base_currency: str, quote_currency:
 
                         await publish_candle(nc, candle=candle_data)
                         await asyncio.sleep(0)
-
         except (websockets.ConnectionClosedError,
                 websockets.ConnectionClosedOK,
                 asyncio.TimeoutError,
                 OSError) as e:
-            await send_alert("DataCollectorApp-Candle", str(e))
+            notify_telegram("❌ DataCollectorApp-Candle \n" + str(e), ChatType.ALERT)
             logger.warning(f"Candle WS dropped ({c_symbol} {timeframe}): {e}; reconnecting in ~{delay:.1f}s")
             delay = await _reconnect_backoff(delay)
             continue
         except Exception as e:
-            await send_alert("DataCollectorApp-Candle", str(e))
+            notify_telegram("❌ DataCollectorApp-Candle \n" + str(e), ChatType.ALERT)
             logger.exception(f"Unexpected candle error ({c_symbol} {timeframe}): {e}")
             delay = await _reconnect_backoff(delay)
             continue

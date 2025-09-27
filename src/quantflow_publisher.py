@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 from nats.aio.client import Client as NATS
 import logging
+from telegram_notifier import notify_telegram, ChatType
 
 # --------- small utilities ---------------------------------------------------
 logger = logging.getLogger(__name__)
@@ -124,6 +125,7 @@ async def publish_candle(
                         "Message": f"NATS error: {e}"
                     })
             )
+        notify_telegram("❌ DataCollectorApp-Candle-Publisher \n" + str(e), ChatType.ALERT)
         return None
     
 
@@ -212,6 +214,7 @@ async def publish_tick(
                         "Message": f"NATS error: {e}"
                     })
             )
+        notify_telegram("❌ DataCollectorApp-Tick-Publisher \n" + str(e), ChatType.ALERT)
         return None
 
     
