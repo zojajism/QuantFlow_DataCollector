@@ -19,7 +19,7 @@ async def main():
                             "Message": f"Starting QuantFlow_DataCollector..."
                         })
                )
-        notify_telegram(f"❇️ Data Collector App started....", ChatType.INFO)
+        notify_telegram(f"❇️ Data Collector App started....", ChatType.ALERT)
         
         symbols = ["BTC/USDT", "ETH/BTC", "ETH/USDT"]
         timeframes= ["1m", "3m", "5m", "15m", "30m", "1h", "4h", "1d"]
@@ -44,7 +44,7 @@ async def main():
         await asyncio.gather(*candle_tasks, *ticker_tasks)
         
     finally:
-        notify_telegram(f"⛔️ Data Collector App stopped.", ChatType.INFO)
+        notify_telegram(f"⛔️ Data Collector App stopped.", ChatType.ALERT)
         await close_telegram_notifier()
 
 if __name__ == "__main__":
