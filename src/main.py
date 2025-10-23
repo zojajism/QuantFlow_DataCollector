@@ -1,15 +1,21 @@
 import asyncio
 import json
+
+import yaml
 from logger_config import setup_logger
 from exchange_ws import get_binance_ticker_ws, get_binance_candle_ws
 from nats.aio.client import Client as NATS
 from NATS_setup import ensure_streams_from_yaml
 import os
 from telegram_notifier import notify_telegram, ChatType, start_telegram_notifier, close_telegram_notifier, ChatType
+from pathlib import Path
+
+CONFIG_PATH = Path("/data/config.yaml")
+if not CONFIG_PATH.exists():
+    CONFIG_PATH = Path(__file__).resolve().parent / "data" / "config.yaml"
 
 async def main():
     
-    await start_telegram_notifier()   
         
     try:
         logger = setup_logger()
@@ -19,10 +25,18 @@ async def main():
                             "Message": f"Starting QuantFlow_DataCollector..."
                         })
                )
+        await start_telegram_notifier()   
+
         notify_telegram(f"❇️ Data Collector App started....", ChatType.ALERT)
         
-        symbols = ["BTC/USDT", "ETH/BTC", "ETH/USDT"]
-        timeframes= ["1m", "3m", "5m", "15m", "30m", "1h", "4h", "1d"]
+        if not CONFIG_PATH.exists():
+            raise FileNotFoundError(f"Config file not found: {CONFIG_PATH}")
+
+        with CONFIG_PATH.open("r", encoding="utf-8") as f:
+            config_data = yaml.safe_load(f) or {}
+
+        symbols = [str(s) for s in config_data.get("symbols", [])]
+        timeframes = [str(t) for t in config_data.get("timeframes", [])]
         
         nc = NATS()
         await nc.connect(os.getenv("NATS_URL"), user=os.getenv("NATS_USER"), password=os.getenv("NATS_PASS"))
