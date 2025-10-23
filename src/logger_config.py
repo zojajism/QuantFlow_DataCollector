@@ -44,7 +44,7 @@ def setup_logger():
         handlers=handlers
     )
 
-    logger = logging.getLogger("QuantFlow_DataWriter")
+    logger = logging.getLogger("quantflow_DataCollector")
     logger.info(
                 json.dumps({
                         "EventCode": 0,

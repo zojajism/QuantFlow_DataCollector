@@ -25,8 +25,8 @@ async def main():
                             "Message": f"Starting QuantFlow_DataCollector..."
                         })
                )
+        
         await start_telegram_notifier()   
-
         notify_telegram(f"❇️ Data Collector App started....", ChatType.ALERT)
         
         if not CONFIG_PATH.exists():
