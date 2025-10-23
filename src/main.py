@@ -6,9 +6,10 @@ from logger_config import setup_logger
 from exchange_ws import get_binance_ticker_ws, get_binance_candle_ws
 from nats.aio.client import Client as NATS
 from NATS_setup import ensure_streams_from_yaml
-import os
 from telegram_notifier import notify_telegram, ChatType, start_telegram_notifier, close_telegram_notifier, ChatType
+import os
 from pathlib import Path
+from dotenv import load_dotenv
 
 CONFIG_PATH = Path("/data/config.yaml")
 if not CONFIG_PATH.exists():
@@ -18,6 +19,10 @@ async def main():
     
         
     try:
+
+        env_path = Path(__file__).resolve().parent / "data" / ".env"
+        load_dotenv(dotenv_path=env_path)
+
         logger = setup_logger()
         logger.info(
                     json.dumps({
