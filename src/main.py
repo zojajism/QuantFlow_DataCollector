@@ -20,7 +20,11 @@ async def main():
         
     try:
 
-        env_path = Path(__file__).resolve().parent / "data" / ".env"
+        # Try the Docker volume location first
+        env_path = Path("/data/.env")
+        # Fallback for local dev
+        if not env_path.exists():
+            env_path = Path(__file__).resolve().parent / "data" / ".env"
         load_dotenv(dotenv_path=env_path)
 
         logger = setup_logger()

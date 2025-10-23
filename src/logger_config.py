@@ -15,6 +15,8 @@ def setup_logger():
     if not log_dir.exists():
         log_dir = Path(__file__).resolve().parent / "data" / "logs"  # <- your local folder name
 
+    
+
     log_dir.mkdir(parents=True, exist_ok=True)
     log_file = log_dir / "quantflow_DataCollector.log"
 
